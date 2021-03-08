@@ -39,8 +39,9 @@
       <code>{{ tronLinkChain }}</code>
     </p>
     <p>
-      <input v-model="balance" />
-      <button @click="queryBalance">Query Balance</button>
+      <input v-model="balance" />&nbsp;
+      <button @click="queryBalance">Query Balance</button>&nbsp;
+      <button @click="queryTrc20Balance">Query TRC20 Balance</button>
     </p>
     <p>
       <input v-model="toAccount" />
@@ -75,6 +76,17 @@ export default defineComponent({
     async queryBalance() {
       const resp = await tronWeb.trx.getAccount(tronWeb.defaultAddress.base58);
       this.balance = tronWeb.fromSun(resp.balance);
+    },
+    async queryTrc20Balance() {
+      const CONTRACT = "TF17BgPaZYbz8oxbjhriubPDsA7ArKoLX3";
+      const { abi } = await tronWeb.trx.getContract(CONTRACT);
+      const contract = tronWeb.contract(abi.entrys, CONTRACT);
+      const balance = await contract.methods
+        .balanceOf(tronWeb.defaultAddress.base58)
+        .call();
+      const decimal = await contract.methods.decimals().call();
+      // console.log(balance);
+      this.balance = balance / Math.pow(10, decimal);
     },
     async sendTrx() {
       await tronWeb.trx
