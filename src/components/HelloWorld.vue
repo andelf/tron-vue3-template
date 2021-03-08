@@ -38,6 +38,17 @@
       Address is <code>{{ tronLinkAddress }}</code> Network:
       <code>{{ tronLinkChain }}</code>
     </p>
+    <p>
+      <input v-model="balance" />
+      <button @click="queryBalance">Query Balance</button>
+    </p>
+    <p>
+      <input v-model="toAccount" />
+      <button @click="sendTrx">Send 10TRX</button>
+    </p>
+    <p>
+      <code>{{ info }}</code>
+    </p>
     <p v-if="!tronLinkInstalled">Please install TronLink!</p>
     <p v-if="tronLinkInstalled && !tronLinkReady">Please unlock TronLink!</p>
   </template>
@@ -54,18 +65,30 @@ export default defineComponent({
     },
   },
   data() {
-    return { address: "" };
+    return { info: "", balance: null, toAccount: "" };
   },
   setup: () => {
     const count = ref(0);
     return { count };
   },
-  mounted: () => {
-    console.log("mount");
-    // console.log(window.tronWeb);
-
-    //console.log(tronWeb);
-    //address = tronWeb.address;
+  methods: {
+    async queryBalance() {
+      const resp = await tronWeb.trx.getAccount(tronWeb.defaultAddress.base58);
+      this.balance = tronWeb.fromSun(resp.balance);
+    },
+    async sendTrx() {
+      await tronWeb.trx
+        .sendTrx(this.toAccount, tronWeb.toSun(10))
+        .then((resp) => {
+          console.log(resp);
+          if (resp.result) {
+            this.info = resp.txid;
+          }
+        })
+        .catch((err) => {
+          console.log("ERROR:", err);
+        });
+    },
   },
 });
 </script>
